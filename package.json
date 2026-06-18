@@ -9,6 +9,9 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@8thwall/engine-binary": "^1.0.0",
+    "@8thwall/landing-page": "^1.0.0",
+    "@8thwall/xrextras": "^1.0.0",
     "three": "^0.183.2"
   },
   "devDependencies": {
