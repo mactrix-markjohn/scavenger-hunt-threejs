@@ -14,9 +14,9 @@ export class GameState {
         points: 100,
         nextClue: 'Next Objective: Find the Power marker and scan the cover to complete the quest!',
       },
-      'image-target-power': {
+      'image-target-back-power': {
         title: 'Power of Chess Unlocked! 👑',
-        description: 'You scanned the Power Cover! Command the chessboard and secure victory.',
+        description: 'You scanned the Power Back Cover! Command the chessboard and secure victory.',
         points: 150,
         nextClue: 'Quest Completed! Enter your email to claim your grand giveaway reward!',
       }
@@ -96,7 +96,7 @@ export class GameState {
     }
     
     // Find the first target in order that has not been scanned yet
-    const targetOrder = ['image-target-atomic', 'image-target-power']
+    const targetOrder = ['image-target-atomic', 'image-target-back-power']
     for (const targetName of targetOrder) {
       if (!this.isTargetScanned(targetName)) {
         // Return nextClue of the *last scanned* target

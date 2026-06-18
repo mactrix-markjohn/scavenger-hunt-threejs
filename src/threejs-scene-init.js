@@ -5,6 +5,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 export const initScenePipelineModule = (gameState, uiManager) => {
   const anchorGroups = {}
   const spinMeshes = []
+  const mixers = []
+  const clock = new THREE.Clock()
 
   // Populates lighting, shadows, and default placeholder geometries
   const initXrScene = ({scene, camera, renderer}) => {
@@ -26,7 +28,7 @@ export const initScenePipelineModule = (gameState, uiManager) => {
     scene.add(ambientLight)
 
     // Define coordinates syncing anchors for each target
-    const targetNames = ['image-target-atomic', 'image-target-power']
+    const targetNames = ['image-target-atomic', 'image-target-back-power']
     
     targetNames.forEach((name) => {
       // 1. Create a tracking group for this anchor
@@ -50,7 +52,7 @@ export const initScenePipelineModule = (gameState, uiManager) => {
 
       // 3. Load the custom GLTF model asynchronously
       const loader = new GLTFLoader()
-      const modelUrl = name === 'image-target-atomic' ? 'assets/atom.glb' : 'assets/chess_polycam_glb.glb'
+      const modelUrl = name === 'image-target-atomic' ? 'assets/AstronautThumbUp.glb' : 'assets/PirateFail.glb'
       
       loader.load(
         modelUrl,
@@ -60,11 +62,18 @@ export const initScenePipelineModule = (gameState, uiManager) => {
           
           const model = gltf.scene
           
+          // Print model bounds size for visual scaling reference
+          const box = new THREE.Box3().setFromObject(model)
+          const size = box.getSize(new THREE.Vector3())
+          console.log(`[AR] Model loaded for ${name}, bounds size:`, size)
+
           // Configure model scale and position based on target
           if (name === 'image-target-atomic') {
-            model.scale.set(0.12, 0.12, 0.12) // Scale down complex atomic model
+            // Astronaut model is usually large (~2m tall), scale it down
+            model.scale.set(0.2, 0.2, 0.2)
           } else {
-            model.scale.set(0.04, 0.04, 0.04) // Scale chess model appropriately
+            // Pirate model is also large (~2m tall), scale it down
+            model.scale.set(0.2, 0.2, 0.2)
           }
           
           model.position.set(0, 0.05, 0) // Align slightly above cover surface
@@ -78,7 +87,15 @@ export const initScenePipelineModule = (gameState, uiManager) => {
           })
           
           group.add(model)
-          spinMeshes.push(model) // Spin the GLB model in update loop
+
+          // Play loaded GLTF skeletal animations immediately
+          if (gltf.animations && gltf.animations.length > 0) {
+            const mixer = new THREE.AnimationMixer(model)
+            const action = mixer.clipAction(gltf.animations[0])
+            action.play()
+            mixers.push(mixer)
+            console.log(`[AR] Playing animation "${gltf.animations[0].name}" for target: ${name}`)
+          }
         },
         undefined,
         (error) => {
@@ -108,11 +125,17 @@ export const initScenePipelineModule = (gameState, uiManager) => {
 
     // Runs every tick (frame update) for animations
     onUpdate: () => {
-      // Rotate models for polished micro-animations
+      // Rotate placeholder loading rings
       spinMeshes.forEach((mesh) => {
         if (mesh.parent && mesh.parent.visible) {
           mesh.rotation.y += 0.015
         }
+      })
+
+      // Update animation mixers with clock delta time
+      const delta = clock.getDelta()
+      mixers.forEach((mixer) => {
+        mixer.update(delta)
       })
     },
 

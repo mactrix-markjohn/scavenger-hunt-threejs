@@ -10,7 +10,7 @@ window.THREE.GLTFLoader = GLTFLoader
 
 // Import pre-processed target metadata configs
 import targetAtomic from '../image-targets/image-target-atomic.json'
-import targetPower from '../image-targets/image-target-power.json'
+import targetBackPower from '../image-targets/image-target-back-power.json'
 
 const onxrloaded = () => {
   // 1. Initialize core game state and UI HUD handlers
@@ -27,7 +27,7 @@ const onxrloaded = () => {
 
   // 3. Register target configurations into the tracking module
   XR8.XrController.configure({
-    imageTargetData: [targetAtomic, targetPower]
+    imageTargetData: [targetAtomic, targetBackPower]
   })
 
   // 4. Bind camera pipeline components
