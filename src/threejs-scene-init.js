@@ -104,67 +104,6 @@ export const initScenePipelineModule = (gameState, uiManager) => {
         origin: camera.position,
         facing: camera.quaternion
       })
-
-      // Register target events listeners
-      window.addEventListener('reality.imagefound', (event) => {
-        const {name, position, rotation, scale} = event.detail
-        const group = anchorGroups[name]
-
-        if (group) {
-          group.position.copy(position)
-          group.quaternion.copy(rotation)
-          group.scale.set(scale, scale, scale)
-          group.visible = true
-
-          // Award points and check completions via game state
-          const reward = gameState.scanTarget(name)
-          if (reward) {
-            // Update HUD values
-            uiManager.updateHUD(
-              reward.totalScore,
-              reward.progress,
-              gameState.totalTargets,
-              reward.nextClue
-            )
-
-            // Open found overlay
-            uiManager.showFoundModal(
-              reward.title,
-              reward.description,
-              reward.points,
-              () => {
-                // Check if hunt is finished on close
-                if (reward.isFinished) {
-                  uiManager.showGameOverModal('QUEST-HERO-99', (email) => {
-                    alert(`Giveaway entry confirmed for: ${email}\nClaim your prize at the desk!`)
-                    uiManager.hideAllModals()
-                  })
-                }
-              }
-            )
-          }
-        }
-      })
-
-      window.addEventListener('reality.imageupdated', (event) => {
-        const {name, position, rotation, scale} = event.detail
-        const group = anchorGroups[name]
-
-        if (group) {
-          group.position.copy(position)
-          group.quaternion.copy(rotation)
-          group.scale.set(scale, scale, scale)
-        }
-      })
-
-      window.addEventListener('reality.imagelost', (event) => {
-        const {name} = event.detail
-        const group = anchorGroups[name]
-
-        if (group) {
-          group.visible = false
-        }
-      })
     },
 
     // Runs every tick (frame update) for animations
@@ -175,6 +114,79 @@ export const initScenePipelineModule = (gameState, uiManager) => {
           mesh.rotation.y += 0.015
         }
       })
-    }
+    },
+
+    // Register target events listeners directly through the pipeline module listeners
+    listeners: [
+      {
+        event: 'reality.imagefound',
+        process: (event) => {
+          const detail = event.detail || event
+          const {name, position, rotation, scale} = detail
+          const group = anchorGroups[name]
+
+          if (group) {
+            group.position.copy(position)
+            group.quaternion.copy(rotation)
+            group.scale.set(scale, scale, scale)
+            group.visible = true
+
+            // Award points and check completions via game state
+            const reward = gameState.scanTarget(name)
+            if (reward) {
+              // Update HUD values
+              uiManager.updateHUD(
+                reward.totalScore,
+                reward.progress,
+                gameState.totalTargets,
+                reward.nextClue
+              )
+
+              // Open found overlay
+              uiManager.showFoundModal(
+                reward.title,
+                reward.description,
+                reward.points,
+                () => {
+                  // Check if hunt is finished on close
+                  if (reward.isFinished) {
+                    uiManager.showGameOverModal('QUEST-HERO-99', (email) => {
+                      alert(`Giveaway entry confirmed for: ${email}\nClaim your prize at the desk!`)
+                      uiManager.hideAllModals()
+                    })
+                  }
+                }
+              )
+            }
+          }
+        }
+      },
+      {
+        event: 'reality.imageupdated',
+        process: (event) => {
+          const detail = event.detail || event
+          const {name, position, rotation, scale} = detail
+          const group = anchorGroups[name]
+
+          if (group) {
+            group.position.copy(position)
+            group.quaternion.copy(rotation)
+            group.scale.set(scale, scale, scale)
+          }
+        }
+      },
+      {
+        event: 'reality.imagelost',
+        process: (event) => {
+          const detail = event.detail || event
+          const {name} = detail
+          const group = anchorGroups[name]
+
+          if (group) {
+            group.visible = false
+          }
+        }
+      }
+    ]
   }
 }
