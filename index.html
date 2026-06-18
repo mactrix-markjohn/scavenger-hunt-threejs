@@ -341,20 +341,58 @@
 <body>
   <!-- On-screen console debugger for mobile unhandled exceptions -->
   <div id="error-console" style="position: absolute; top: 0; left: 0; width: 100%; max-height: 60%; overflow-y: auto; background: rgba(100, 0, 0, 0.95); color: #ffcccc; z-index: 99999; font-family: monospace; font-size: 11px; padding: 15px; display: none; box-sizing: border-box; border-bottom: 2px solid red; pointer-events: auto; word-wrap: break-word;">
-    <h3 style="margin-top:0; color:#fff;">⚠️ Mobile Debug Console</h3>
   </div>
   <script>
     const errConsole = document.getElementById('error-console');
-    window.onerror = function(message, source, lineno, colno, error) {
+    errConsole.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><h3 style="margin:0; color:#fff;">⚠️ Mobile Debug Console</h3><button onclick="document.getElementById(\'error-console\').style.display=\'none\'" style="background:#fff; color:#a00; border:none; padding:2px 8px; border-radius:4px; font-weight:bold; cursor:pointer;">Close</button></div>';
+
+    function logError(title, details) {
       errConsole.style.display = 'block';
-      errConsole.innerHTML += '<div style="margin-bottom:10px;"><b>Msg:</b> ' + message + '<br><b>File:</b> ' + source + ':' + lineno + ':' + colno + '<br><b>Stack:</b> ' + (error && error.stack ? error.stack : 'N/A') + '</div><hr style="border:0; border-top:1px solid rgba(255,255,255,0.2);">';
+      errConsole.innerHTML += '<div style="margin-bottom:10px;"><b>' + title + ':</b> ' + details + '</div><hr style="border:0; border-top:1px solid rgba(255,255,255,0.2);">';
+    }
+
+    window.onerror = function(message, source, lineno, colno, error) {
+      let stack = (error && error.stack) ? error.stack : 'N/A';
+      logError('Unhandled Error', message + '<br><b>File:</b> ' + source + ':' + lineno + ':' + colno + '<br><b>Stack:</b> ' + stack);
       return false;
     };
+
     window.addEventListener('unhandledrejection', function(event) {
-      errConsole.style.display = 'block';
       const reason = event.reason;
-      errConsole.innerHTML += '<div style="margin-bottom:10px;"><b>Rejection:</b> ' + reason + '<br><b>Stack:</b> ' + (reason && reason.stack ? reason.stack : 'N/A') + '</div><hr style="border:0; border-top:1px solid rgba(255,255,255,0.2);">';
+      let details = reason;
+      if (reason instanceof Event) {
+        details = 'Event of type "' + reason.type + '"';
+        if (reason.target) {
+          details += ' on <' + (reason.target.tagName || '').toLowerCase() + '>';
+          if (reason.target.src) details += ' src="' + reason.target.src + '"';
+          if (reason.target.href) details += ' href="' + reason.target.href + '"';
+        }
+      } else if (reason && typeof reason === 'object') {
+        try {
+          details = JSON.stringify(reason);
+        } catch(e) {
+          details = String(reason);
+        }
+      }
+      let stack = (reason && reason.stack) ? reason.stack : 'N/A';
+      logError('Promise Rejection', details + '<br><b>Stack:</b> ' + stack);
     });
+
+    window.addEventListener('error', function(event) {
+      if (event.message) return; // Ignore runtime errors logged by window.onerror
+      const target = event.target || event.srcElement;
+      if (target) {
+        let details = 'Failed to load resource: ';
+        if (target.tagName) {
+          details += '<' + target.tagName.toLowerCase() + '>';
+          if (target.src) details += ' src="' + target.src + '"';
+          if (target.href) details += ' href="' + target.href + '"';
+        } else {
+          details += String(target);
+        }
+        logError('Resource Load Error', details);
+      }
+    }, true);
   </script>
 
   <!-- The main canvas used for WebGL drawing by the app -->
