@@ -1,6 +1,12 @@
+import * as THREE from 'three'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { GameState } from './game-state.js'
 import { UIManager } from './ui-manager.js'
 import { initScenePipelineModule } from './threejs-scene-init.js'
+
+// Expose THREE globally for 8th Wall engine and components
+window.THREE = THREE
+window.THREE.GLTFLoader = GLTFLoader
 
 // Import pre-processed target metadata configs
 import targetAtomic from '../image-targets/image-target-atomic.json'
