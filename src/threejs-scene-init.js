@@ -76,7 +76,8 @@ export const initScenePipelineModule = (gameState, uiManager) => {
             model.scale.set(0.2, 0.2, 0.2)
           }
           
-          model.position.set(0, 0.05, 0) // Align slightly above cover surface
+          model.rotation.x = Math.PI / 2 // Rotate model to stand perpendicular to the target cover
+          model.position.set(0, 0, 0)    // Align model base at the target center
           
           // Enable shadow casting for meshes in the model
           model.traverse((node) => {
